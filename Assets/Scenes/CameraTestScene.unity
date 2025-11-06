@@ -3811,7 +3811,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   playerTransform: {fileID: 0}
   offset: {x: 0, y: 5, z: -8}
-  rotationSpeed: 3
+  rotationSpeed: 50
   isAiming: 1
   aimOffset: {x: 0, y: 2, z: -3}
   aimTransitionSpeed: 5

@@ -4,62 +4,82 @@ public class CameraController : MonoBehaviour
 {
     [Header("기본 설정")]
     public Transform playerTransform;
-    public Vector3 offset = new Vector3(0f, 5f, -8f);
-    public float rotationSpeed = 3f;
+    public Vector3 offset = new Vector3(0f, 3f, -6f);
+    public float rotationSpeed = 350f;
 
-    [Header("조준 모드 설정")]
+
+    [Header("조준 모드")]
     public bool isAiming = false;
     public Vector3 aimOffset = new Vector3(0f, 2f, -3f);
     public float aimTransitionSpeed = 5f;
-    public float aimSensitivity = 1.5f;
+    public float aimSensitivity = 0.5f;
 
-    [Header("사망 시점 설정")]
+    [Header("사망 시점")]
     public bool isDeathView = false;
     private Quaternion deathViewRotation;
 
     private float mouseX, mouseY;
+    private Camera cam;
 
     void Start()
     {
         if (playerTransform == null)
             playerTransform = GameObject.Find("Player").transform;
+
+        cam = GetComponent<Camera>();
+        Cursor.lockState = CursorLockMode.Locked;
+        Cursor.visible = false;
     }
 
     void Update()
     {
         HandleMouseRotation();
-        isAiming = Input.GetMouseButton(1); // 우클릭으로 조준
+        HandleAimInput();
     }
 
     void LateUpdate()
     {
         if (playerTransform == null) return;
 
-        if (!isDeathView)
+        if (isDeathView)
         {
-            Vector3 targetPosition = playerTransform.position + (isAiming ? aimOffset : offset);
-            transform.position = Vector3.Lerp(transform.position, targetPosition, Time.deltaTime * aimTransitionSpeed);
-            transform.LookAt(playerTransform);
-        }
-        else
-        {
+            // 사망 시 상공 시점 고정
+            transform.position = Vector3.Lerp(transform.position, playerTransform.position + new Vector3(0, 15f, -10f), Time.deltaTime);
             transform.rotation = Quaternion.Slerp(transform.rotation, deathViewRotation, Time.deltaTime);
+            return;
         }
+
+        // 카메라 위치 계산 (조준 여부에 따라 오프셋 변경)
+        Vector3 desiredOffset = isAiming ? aimOffset : offset;
+        Quaternion rotation = Quaternion.Euler(mouseY, mouseX, 0);
+        Vector3 targetPosition = playerTransform.position + rotation * desiredOffset;
+
+        transform.position = Vector3.Lerp(transform.position, targetPosition, Time.deltaTime * aimTransitionSpeed);
+        transform.LookAt(playerTransform);
     }
 
-    void HandleMouseRotation()
+    private void HandleMouseRotation()
     {
         if (isDeathView) return;
 
-        float rotSpeed = isAiming ? aimSensitivity : rotationSpeed;
+        // 마우스 감도
+        float sens = isAiming ? aimSensitivity : rotationSpeed * 0.01f;
 
-        mouseX += Input.GetAxis("Mouse X") * rotSpeed;
-        mouseY -= Input.GetAxis("Mouse Y") * rotSpeed;
-        mouseY = Mathf.Clamp(mouseY, -30f, 60f);
-
-        transform.rotation = Quaternion.Euler(mouseY, mouseX, 0);
+        mouseX += Input.GetAxis("Mouse X") * sens;
+        mouseY -= Input.GetAxis("Mouse Y") * sens;
+        mouseY = Mathf.Clamp(mouseY, -35f, 60f);
     }
 
+    private void HandleAimInput()
+    {
+        isAiming = Input.GetMouseButton(1);
+
+        // 조준 시 FOV 조정 (줌인)
+        float targetFov = isAiming ? 40f : 60f;
+        cam.fieldOfView = Mathf.Lerp(cam.fieldOfView, targetFov, Time.deltaTime * 5f);
+    }
+
+    // --------- 이벤트 핸들러 ---------
     public void OnPlayerDeath()
     {
         isDeathView = true;
