@@ -5,7 +5,7 @@ public class CameraController : MonoBehaviour
     [Header("기본 설정")]
     public Transform playerTransform;
     public Vector3 offset = new Vector3(0f, 3f, -6f);
-    public float rotationSpeed = 350f;
+    public float rotationSpeed = 450f;
 
 
     [Header("조준 모드")]
@@ -55,7 +55,10 @@ public class CameraController : MonoBehaviour
         Vector3 targetPosition = playerTransform.position + rotation * desiredOffset;
 
         transform.position = Vector3.Lerp(transform.position, targetPosition, Time.deltaTime * aimTransitionSpeed);
-        transform.LookAt(playerTransform);
+        // transform.LookAt(playerTransform);
+        Quaternion lookRotation = Quaternion.LookRotation(playerTransform.position - transform.position);
+        transform.rotation = Quaternion.Slerp(transform.rotation, lookRotation, Time.deltaTime * 5f);
+
     }
 
     private void HandleMouseRotation()
@@ -63,10 +66,10 @@ public class CameraController : MonoBehaviour
         if (isDeathView) return;
 
         // 마우스 감도
-        float sens = isAiming ? aimSensitivity : rotationSpeed * 0.01f;
+        float sens = isAiming ? aimSensitivity : rotationSpeed;
 
-        mouseX += Input.GetAxis("Mouse X") * sens;
-        mouseY -= Input.GetAxis("Mouse Y") * sens;
+        mouseX += Input.GetAxis("Mouse X") * sens * 0.002f;
+        mouseY -= Input.GetAxis("Mouse Y") * sens * 0.002f;
         mouseY = Mathf.Clamp(mouseY, -35f, 60f);
     }
 
