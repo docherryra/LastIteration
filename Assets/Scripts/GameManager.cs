@@ -7,7 +7,7 @@ using UnityEngine.SceneManagement;
 
 public class NewBehaviourScript : MonoBehaviour
 {
-    public GameObject endgameText;
+    public Text endgameText;
     public Text timeText;
    
     private float leftTime;
@@ -29,18 +29,11 @@ public class NewBehaviourScript : MonoBehaviour
         if (!isGameover)
         {
             leftTime -= Time.deltaTime;
-            timeText.text = (int)leftTime / 60 + " : " + (int)leftTime%60;
+            timeText.text = (int)leftTime/60 + " : " + (int)leftTime%60;
         }
         else
         {
             SceneManager.LoadScene("EndScene");
         }
     }
-
-    public void EndGame()
-    {
-        isGameover = true;
-        endgameText.SetActive(true);
-    }
-
 }
