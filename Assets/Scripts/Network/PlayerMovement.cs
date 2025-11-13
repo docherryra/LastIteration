@@ -26,23 +26,21 @@ public class PlayerMovement : NetworkBehaviour
     }
 
     public override void FixedUpdateNetwork()
+{
+    if (GetInput(out NetworkInputData data))
     {
-        if (!Object.HasInputAuthority) return;
-
         isGrounded = controller.isGrounded;
         if (isGrounded && velocity.y < 0)
             velocity.y = -2f;
 
-        float h = Input.GetAxis("Horizontal");
-        float v = Input.GetAxis("Vertical");
-
-        Vector3 move = transform.right * h + transform.forward * v;
+        Vector3 move = transform.right * data.moveInput.x + transform.forward * data.moveInput.y;
         controller.Move(move * moveSpeed * Runner.DeltaTime);
 
-        if (Input.GetButtonDown("Jump") && isGrounded)
+        if (data.jumpPressed && isGrounded)
             velocity.y = Mathf.Sqrt(jumpForce * -2f * gravity);
 
         velocity.y += gravity * Runner.DeltaTime;
         controller.Move(velocity * Runner.DeltaTime);
     }
+}
 }
