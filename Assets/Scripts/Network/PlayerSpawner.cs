@@ -11,11 +11,13 @@ public class PlayerSpawner : MonoBehaviour, INetworkRunnerCallbacks
     // 플레이어가 룸에 입장했을 때 호출됨
     public void OnPlayerJoined(NetworkRunner runner, PlayerRef player)
     {
-        if (runner.IsServer)
-        {
+        // 각 클라이언트가 자기 자신만 스폰
+        if (runner.LocalPlayer == player){
+            Debug.Log("[Fusion] 클라이언트 랜덤 위치에 스폰");
             Vector3 spawnPos = new Vector3(UnityEngine.Random.Range(-5f, 5f), 1f, UnityEngine.Random.Range(-5f, 5f));
+        
             runner.Spawn(playerPrefab, spawnPos, Quaternion.identity, player);
-            Debug.Log($"[Fusion] Player spawned: {player}");
+            Debug.Log($"[Fusion] Player spawned: {player} 로컬 플레이어가 스폰됨");
         }
     }
 

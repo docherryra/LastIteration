@@ -1,3 +1,4 @@
+using System.Collections;
 using Fusion;
 using UnityEngine;
 
@@ -20,8 +21,22 @@ public class PlayerMovement : NetworkBehaviour
 
         // 내 플레이어일 때만 카메라 연결
         if (Object.HasInputAuthority)
-        {
-            Camera.main.GetComponent<CameraFollow>().SetTarget(transform);
+            StartCoroutine(SetupCamera());
+        // Camera.main.GetComponent<CameraFollow>().SetTarget(transform);
+
+    }
+    
+    private IEnumerator SetupCamera()
+    {
+        yield return new WaitForSeconds(0.2f); // 네트워크 초기화 대기
+        var cam = Camera.main?.GetComponent<CameraController>();
+        
+        if (cam != null) {
+            cam.playerTransform = transform;
+            Debug.Log("[Fusion] CameraController 연결 완료");
+
+        } else {
+            Debug.LogWarning("[Fusion] CameraController를 찾을 수 없습니다.");
         }
     }
 

@@ -15,6 +15,13 @@ public class NetworkRunnerHandler : MonoBehaviour
 
     async void Awake()
     {
+        if (FindObjectsOfType<NetworkRunnerHandler>().Length > 1) {
+            Destroy(gameObject);
+            return;
+        }
+
+        DontDestroyOnLoad(gameObject);
+    
         // 콜백 객체 미리 찾음
         _spawner = GetComponent<PlayerSpawner>();
     }
