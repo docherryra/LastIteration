@@ -6,7 +6,7 @@ public class PlayerState : MonoBehaviour
     [Header("Game State")]
     [SerializeField] private float hp = 100f;
     [SerializeField] private float maxHp = 100f;
-    [SerializeField] private float kill = 0f;   // ÃßÈÄ ¼­¹ö¿¡¼­ °ü¸®ÇÒ ¿¹Á¤
+    [SerializeField] private float kill = 0f;   // ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
     [SerializeField] private float death = 0f;
     [SerializeField] private bool isDead = false;
 
@@ -15,11 +15,12 @@ public class PlayerState : MonoBehaviour
 
     private Vector3 spawnPosition;
     private Quaternion spawnRotation;
-    private float respawnEndTime = -1f;   // »ç¸Á ½ÃÁ¡ + respawnDelay
+    private float respawnEndTime = -1f;   // ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ + respawnDelay
 
     private Collider[] colliders;
     private Renderer[] renderers;
     private Rigidbody rb;
+    private Animator animator;
 
     void Start()
     {
@@ -29,9 +30,20 @@ public class PlayerState : MonoBehaviour
         colliders = GetComponentsInChildren<Collider>(true);
         renderers = GetComponentsInChildren<Renderer>(true);
         rb = GetComponent<Rigidbody>();
+        animator = GetComponent<Animator>();
     }
 
-    // ¿ÜºÎ¿¡¼­ »óÅÂ È®ÀÎ
+    void Update()
+    {
+        // í…ŒìŠ¤íŠ¸ìš©: K í‚¤ë¥¼ ëˆ„ë¥´ë©´ ì¦‰ì‚¬
+        if (Input.GetKeyDown(KeyCode.K))
+        {
+            TakeDamage(999f, -1);
+            Debug.Log("í…ŒìŠ¤íŠ¸: í”Œë ˆì´ì–´ ì‚¬ë§!");
+        }
+    }
+
+    // ï¿½ÜºÎ¿ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ È®ï¿½ï¿½
     public bool IsDead() => isDead;
 
     public void TakeDamage(float damage, int attackerId)
@@ -52,15 +64,25 @@ public class PlayerState : MonoBehaviour
         isDead = true;
         death += 1f;
 
+        if (animator != null)
+        {
+            animator.SetBool("IsDead", true);
+            animator.SetTrigger("Die");
+        }
+
         if (rb != null)
         {
             rb.velocity = Vector3.zero;
             rb.angularVelocity = Vector3.zero;
             rb.isKinematic = true;
         }
-        SetAliveVisual(false);
 
-        //¸®½ºÆù Á¾·á ½Ã°¢ ±â·Ï
+        if (colliders != null)
+        {
+            foreach (var c in colliders) c.enabled = false;
+        }
+
+        //ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½Ã°ï¿½ ï¿½ï¿½ï¿½
         respawnEndTime = Time.time + respawnDelay;
 
         StartCoroutine(RespawnAfterDelay());
@@ -74,14 +96,20 @@ public class PlayerState : MonoBehaviour
 
     private void Respawn()
     {
-        // À§Ä¡/È¸Àü ÃÊ±âÈ­
+        // ï¿½ï¿½Ä¡/È¸ï¿½ï¿½ ï¿½Ê±ï¿½È­
         transform.SetPositionAndRotation(spawnPosition, spawnRotation);
 
-        // Ã¼·Â º¹±¸
+        // Ã¼ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
         hp = maxHp;
         isDead = false;
 
-        // ¹°¸®/Ãæµ¹/·»´õ º¹±¸
+        if (animator != null)
+        {
+            animator.SetBool("IsDead", false);
+            animator.Rebind();
+        }
+
+        // ï¿½ï¿½ï¿½ï¿½/ï¿½æµ¹/ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
         if (rb != null)
         {
             rb.isKinematic = false;
@@ -101,7 +129,7 @@ public class PlayerState : MonoBehaviour
     public float GetKill() => kill;
     public float GetDeath() => death;
 
-    // »ç¸Á ÁßÀÏ ¶§¸¸ ³²Àº ÃÊ ¹ÝÈ¯, »ýÁ¸ ÁßÀÌ¸é 0
+    // ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½È¯, ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½Ì¸ï¿½ 0
     public float GetRespawnRemaining()
     {
         if (!isDead) return 0f;
