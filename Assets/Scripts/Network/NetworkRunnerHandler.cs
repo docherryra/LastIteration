@@ -5,74 +5,76 @@ using Fusion.Sockets;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
-
-// NetworkRunnerHandler에 붙어 네트워크 관리
-// 서버 연결, 룸 생성, 씬 관리
+// 네트워크 전체를 관리하는 매니저
 public class NetworkRunnerHandler : MonoBehaviour
 {
     private NetworkRunner _runner;
     private PlayerSpawner _spawner;
 
-    async void Awake()
+    void Awake()
     {
+        Debug.Log("[Fusion] NetworkRunnerHandler.Awake() 호출됨");
+
+        // 중복 생성 방지
         if (FindObjectsOfType<NetworkRunnerHandler>().Length > 1) {
             Destroy(gameObject);
             return;
         }
 
         DontDestroyOnLoad(gameObject);
-    
-        // 콜백 객체 미리 찾음
-        _spawner = GetComponent<PlayerSpawner>();
-    }
 
+        // 콜백용 플레이어 스포너 가져옴
+        _spawner = GetComponent<PlayerSpawner>();
+
+        // NetworkRunner 생성
+        _runner = gameObject.AddComponent<NetworkRunner>();
+
+        // 입력을 Fusion으로 보내도록 설정
+        _runner.ProvideInput = true;
+
+        Debug.Log("[Fusion] Runner 생성 완료 (Awake)");
+    }
 
     async void Start()
     {
         Debug.Log("[Fusion] NetworkRunnerHandler.Start() 호출됨");
 
-        // Runner 생성
-        _runner = gameObject.AddComponent<NetworkRunner>();
-        _runner.ProvideInput = true;
-
-        // Runner 준비 완료 대기
-        await Task.Yield(); // 한 프레임 대기 (Runner 초기화 보장)
-        
-        // spawner 초기화
-        if (_spawner != null) {
-            _runner.AddCallbacks(_spawner);
-            Debug.Log("[Fusion] PlayerSpawner callback registered 콜백 성공");
-        } else {
-            Debug.LogError("[Fusion] PlayerSpawner not found ❌");
+        // Runner와 Spawner 둘 다 있어야 함
+        if (_runner == null) {
+            Debug.LogError("[Fusion] Runner 초기화 실패!");
+            return;
+        }
+        if (_spawner == null) {
+            Debug.LogError("[Fusion] PlayerSpawner 스크립트 없음!");
+            return;
         }
 
-        // 씬 정보
-        var activeScene = SceneManager.GetActiveScene();
-        var sceneRef = SceneRef.FromIndex(activeScene.buildIndex);
+        // 콜백 등록
+        _runner.AddCallbacks(_spawner);
+        Debug.Log("[Fusion] PlayerSpawner Callback 등록 완료");
 
-        var photonAppSettings = PhotonAppSettings.Global;
+        // 현재 씬을 네트워크 씬으로 등록
+        var sceneRef = SceneRef.FromIndex(SceneManager.GetActiveScene().buildIndex);
+        var appSettings = PhotonAppSettings.Global.AppSettings;
 
-        // 게임 시작 정보 설정
-        var startGameArgs = new StartGameArgs()
+        // 게임 실행 설정
+        var startArgs = new StartGameArgs()
         {
-            GameMode = GameMode.AutoHostOrClient, // 방 없으면 Host, 있으면 Client로 실행
+            GameMode = GameMode.AutoHostOrClient,
             SessionName = "TestRoom",
-            Scene = SceneRef.FromIndex(SceneManager.GetActiveScene().buildIndex), // 현재 씬을 네트워크 씬으로 등록
+            Scene = sceneRef,
             SceneManager = gameObject.AddComponent<NetworkSceneManagerDefault>(),
-            CustomPhotonAppSettings = photonAppSettings.AppSettings
+            CustomPhotonAppSettings = appSettings
         };
 
         // 세션 시작
-        var result = await _runner.StartGame(startGameArgs);
+        var result = await _runner.StartGame(startArgs);
 
-        // 세션 상태 디버깅
-        if (result.Ok)
-        {
-            Debug.Log($"✅ !! Joined session: {startGameArgs.SessionName} | Mode: {_runner.GameMode}");
-        }
-        else
-        {
-            Debug.LogError($"❌ !! Failed to start: {result.ShutdownReason}");
+        // 세션 상태 출력
+        if (result.Ok) {
+            Debug.Log($"✅ 세션 접속 성공: {startArgs.SessionName} | Mode: {_runner.GameMode}");
+        } else {
+            Debug.LogError($"❌ 세션 시작 실패: {result.ShutdownReason}");
         }
     }
 }

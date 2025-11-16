@@ -11,30 +11,39 @@ public class PlayerSpawner : MonoBehaviour, INetworkRunnerCallbacks
     // 플레이어가 룸에 입장했을 때 호출됨
     public void OnPlayerJoined(NetworkRunner runner, PlayerRef player)
     {
-        // 각 클라이언트가 자기 자신만 스폰
-        if (runner.LocalPlayer == player){
-            Debug.Log("[Fusion] 클라이언트 랜덤 위치에 스폰");
+        // 로컬 플레이어만 직접 스폰
+        if (runner.LocalPlayer == player)
+        {
+            Debug.Log("[Fusion] 로컬 플레이어 랜덤 위치 스폰");
             Vector3 spawnPos = new Vector3(UnityEngine.Random.Range(-5f, 5f), 1f, UnityEngine.Random.Range(-5f, 5f));
-        
+
             runner.Spawn(playerPrefab, spawnPos, Quaternion.identity, player);
-            Debug.Log($"[Fusion] Player spawned: {player} 로컬 플레이어가 스폰됨");
+            Debug.Log($"[Fusion] Player spawned: {player} (로컬)");
         }
     }
 
     public void OnPlayerLeft(NetworkRunner runner, PlayerRef player)
     {
-        Debug.Log($"[Fusion] Player left: {player}가 나갔음");
+        Debug.Log($"[Fusion] Player left: {player} 나감");
     }
 
+    // 클라이언트의 입력을 Fusion 네트워크로 전달
     public void OnInput(NetworkRunner runner, NetworkInput input)
     {
         NetworkInputData data = new NetworkInputData();
-        data.moveInput = new Vector2(Input.GetAxisRaw("Horizontal"), Input.GetAxisRaw("Vertical"));
-        data.jumpPressed = Input.GetButtonDown("Jump");
+
+        //  이동 입력 (WASD)
+        float x = Input.GetAxisRaw("Horizontal");
+        float y = Input.GetAxisRaw("Vertical");
+        data.moveInput = new Vector2(x, y);
+
+        data.jumpPressed = Input.GetKeyDown(KeyCode.Space); //  점프 입력
+        data.runHeld = Input.GetKey(KeyCode.LeftShift); //  달리기 입력
+        data.crouchHeld = Input.GetKey(KeyCode.LeftControl); //  앉기 입력
         input.Set(data);
     }
 
-    // 나머지 콜백 함수들은 비워둬도 됨
+    // 이하 콜백은 사용 안 함
     public void OnConnectedToServer(NetworkRunner runner) { }
     public void OnDisconnectedFromServer(NetworkRunner runner, NetDisconnectReason reason) { }
     public void OnConnectRequest(NetworkRunner runner, NetworkRunnerCallbackArgs.ConnectRequest request, byte[] token) { }

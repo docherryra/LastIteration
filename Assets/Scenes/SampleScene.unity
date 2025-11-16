@@ -1820,7 +1820,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 875937bc383a4445995ae85ce7b7445b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  playerPrefab: {fileID: 7692109720298215256, guid: ce26dcda44a3e4998bd17d1f2b6cfe4e, type: 3}
+  playerPrefab: {fileID: 4478991402482163089, guid: bc07a3ab3dee041b8838e5068eaa9b79, type: 3}
 --- !u!114 &392484299
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -4252,14 +4252,13 @@ GameObject:
   - component: {fileID: 963194226}
   - component: {fileID: 963194230}
   - component: {fileID: 963194229}
-  - component: {fileID: 963194231}
   m_Layer: 0
   m_Name: MainCamera
   m_TagString: MainCamera
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!81 &963194226
 AudioListener:
   m_ObjectHideFlags: 0
@@ -4366,30 +4365,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: af133569bab7f4ff0bebea8f9b21e251, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  playerTransform: {fileID: 1097921538}
-  offset: {x: 0, y: 2, z: 0}
-  rotationSpeed: 3
+  cameraPivot: {fileID: 0}
+  mouseSensitivity: 2
   isAiming: 1
-  aimOffset: {x: 0, y: 2, z: 1}
-  aimTransitionSpeed: 5
-  aimSensitivity: 1.5
-  isDeathView: 0
-  syncPlayerYaw: 1
-  playerYawSpeed: 12
---- !u!114 &963194231
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 963194225}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 98c1e9ae185d74d19b3dc692bf4d1682, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  offset: {x: 0, y: 3, z: -6}
-  followSpeed: 10
+  minPitch: -70
+  maxPitch: 80
 --- !u!1001 &973905599
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -4823,11 +4803,6 @@ PrefabInstance:
 Transform:
   m_CorrespondingSourceObject: {fileID: 4764293196696219720, guid: ad36c3d044d312e44a986a07f2c7f0b2, type: 3}
   m_PrefabInstance: {fileID: 1096702963}
-  m_PrefabAsset: {fileID: 0}
---- !u!4 &1097921538 stripped
-Transform:
-  m_CorrespondingSourceObject: {fileID: 7058281521018572258, guid: ce26dcda44a3e4998bd17d1f2b6cfe4e, type: 3}
-  m_PrefabInstance: {fileID: 1776457885910399981}
   m_PrefabAsset: {fileID: 0}
 --- !u!1001 &1108829873
 PrefabInstance:
@@ -7194,18 +7169,6 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 4764293196696219720, guid: ad36c3d044d312e44a986a07f2c7f0b2, type: 3}
   m_PrefabInstance: {fileID: 1991751345}
   m_PrefabAsset: {fileID: 0}
---- !u!134 &1993940489
-PhysicMaterial:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_Name: 
-  dynamicFriction: 0.6
-  staticFriction: 0.6
-  bounciness: 0
-  frictionCombine: 0
-  bounceCombine: 0
 --- !u!1001 &2048357153
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -7392,77 +7355,11 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 4764293196696219720, guid: ad36c3d044d312e44a986a07f2c7f0b2, type: 3}
   m_PrefabInstance: {fileID: 2085569400}
   m_PrefabAsset: {fileID: 0}
---- !u!1001 &1776457885910399981
-PrefabInstance:
-  m_ObjectHideFlags: 0
-  serializedVersion: 2
-  m_Modification:
-    serializedVersion: 3
-    m_TransformParent: {fileID: 0}
-    m_Modifications:
-    - target: {fileID: 6880083306504372712, guid: ce26dcda44a3e4998bd17d1f2b6cfe4e, type: 3}
-      propertyPath: SortKey
-      value: 791754782
-      objectReference: {fileID: 0}
-    - target: {fileID: 7058281521018572258, guid: ce26dcda44a3e4998bd17d1f2b6cfe4e, type: 3}
-      propertyPath: m_LocalPosition.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 7058281521018572258, guid: ce26dcda44a3e4998bd17d1f2b6cfe4e, type: 3}
-      propertyPath: m_LocalPosition.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 7058281521018572258, guid: ce26dcda44a3e4998bd17d1f2b6cfe4e, type: 3}
-      propertyPath: m_LocalPosition.z
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 7058281521018572258, guid: ce26dcda44a3e4998bd17d1f2b6cfe4e, type: 3}
-      propertyPath: m_LocalRotation.w
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 7058281521018572258, guid: ce26dcda44a3e4998bd17d1f2b6cfe4e, type: 3}
-      propertyPath: m_LocalRotation.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 7058281521018572258, guid: ce26dcda44a3e4998bd17d1f2b6cfe4e, type: 3}
-      propertyPath: m_LocalRotation.y
-      value: -0
-      objectReference: {fileID: 0}
-    - target: {fileID: 7058281521018572258, guid: ce26dcda44a3e4998bd17d1f2b6cfe4e, type: 3}
-      propertyPath: m_LocalRotation.z
-      value: -0
-      objectReference: {fileID: 0}
-    - target: {fileID: 7058281521018572258, guid: ce26dcda44a3e4998bd17d1f2b6cfe4e, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 7058281521018572258, guid: ce26dcda44a3e4998bd17d1f2b6cfe4e, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 7058281521018572258, guid: ce26dcda44a3e4998bd17d1f2b6cfe4e, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.z
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 7692109720298215256, guid: ce26dcda44a3e4998bd17d1f2b6cfe4e, type: 3}
-      propertyPath: m_Name
-      value: Player
-      objectReference: {fileID: 0}
-    - target: {fileID: 8252034144961967959, guid: ce26dcda44a3e4998bd17d1f2b6cfe4e, type: 3}
-      propertyPath: m_Material
-      value: 
-      objectReference: {fileID: 1993940489}
-    m_RemovedComponents: []
-    m_RemovedGameObjects: []
-    m_AddedGameObjects: []
-    m_AddedComponents: []
-  m_SourcePrefab: {fileID: 100100000, guid: ce26dcda44a3e4998bd17d1f2b6cfe4e, type: 3}
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
   m_Roots:
   - {fileID: 705507995}
-  - {fileID: 1776457885910399981}
   - {fileID: 307636528}
   - {fileID: 416365289}
   - {fileID: 119109743}

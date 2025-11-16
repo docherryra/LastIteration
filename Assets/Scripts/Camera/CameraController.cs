@@ -1,118 +1,84 @@
 using UnityEngine;
+using Fusion;
 
-public class CameraController : MonoBehaviour
+public class CameraController : NetworkBehaviour
 {
-    [Header("기본 설정")]
-    public Transform playerTransform;
-    public Vector3 offset = new Vector3(0f, 3f, -6f);
-    public float rotationSpeed = 3f;
-    
-    [Header("조준 모드")]
+    [Header("FPS 카메라 설정")]
+    public Transform cameraPivot;      // 플레이어 머리 위치
+    public float mouseSensitivity = 2f;
     public bool isAiming = false;
-    public Vector3 aimOffset = new Vector3(0f, 2f, -3f);
-    public float aimTransitionSpeed = 5f;
-    public float aimSensitivity = 1.5f;
+    public float minPitch = -70f;
+    public float maxPitch = 80f;
 
-    [Header("사망 시점")]
-    public bool isDeathView = false;
-    private Quaternion deathViewRotation;
-
-    [Header("플레이어 동기화")]
-    public bool syncPlayerYaw = true;
-    public float playerYawSpeed = 12f;   // 회전 속도(스무딩)
-
-    private float mouseX, mouseY;
+    private float yaw;
+    private float pitch;
     private Camera cam;
+    private PlayerMovement playerMovement;
+
+    public override void Spawned()
+    {
+        // 로컬 플레이어만 카메라 활성화
+        if (!Object.HasInputAuthority)
+        {
+            gameObject.SetActive(false);
+            enabled = false;
+        }
+
+        playerMovement = GetComponentInParent<PlayerMovement>();
+    }
 
     void Start()
     {
-        if (playerTransform == null)
-            playerTransform = GameObject.Find("Player").transform;
-
         cam = GetComponent<Camera>();
 
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
+
+        if (cameraPivot == null)
+            Debug.LogError("[CameraController] cameraPivot이 연결되지 않았습니다!");
     }
 
     void Update()
     {
-        HandleMouseRotation();
-        HandleAimInput();
+        if (!Object.HasInputAuthority) return;
+
+        HandleMouseLook();
+        HandleCameraPosition();
     }
 
-    void LateUpdate()
+    private void HandleMouseLook()
     {
-        if (playerTransform == null) return;
+        // 마우스 입력
+        float mouseX = Input.GetAxis("Mouse X") * mouseSensitivity;
+        float mouseY = Input.GetAxis("Mouse Y") * mouseSensitivity;
 
-        if (isDeathView)
-        {
-            // 사망 시 상공 시점 고정
-            transform.position = Vector3.Lerp(
-                transform.position,
-                playerTransform.position + new Vector3(0, 15f, -10f),
-                Time.deltaTime
-            );
-            transform.rotation = Quaternion.Slerp(transform.rotation, deathViewRotation, Time.deltaTime);
-            return;
-        }
+        yaw += mouseX;
+        pitch -= mouseY;
 
-        // 마우스 입력 받아 카메라 회전
-        Quaternion rotation = Quaternion.Euler(mouseY, mouseX, 0f);
-        transform.rotation = rotation;
-
-        // 카메라 Yaw(mouseX)와 플레이어 Yaw를 동기화
-        if (syncPlayerYaw && playerTransform != null && !isDeathView)
-        {
-            // 플레이어는 수평(Yaw)만 회전하도록 pitch(상하)는 제외
-            Quaternion playerTargetRot = Quaternion.Euler(0f, mouseX, 0f);
-
-            // 스무스 회전
-            playerTransform.rotation = Quaternion.Slerp(
-                playerTransform.rotation,
-                playerTargetRot,
-                playerYawSpeed * Time.deltaTime
-            );
-        }
-
-        // 카메라 위치는 플레이어 기준 고정 (오프셋만 적용)
-        Vector3 desiredOffset = isAiming ? aimOffset : offset;
-        // Vector3 targetPosition = playerTransform.position + rotation * desiredOffset;
-        Vector3 targetPosition = playerTransform.position + desiredOffset;
-        transform.position = Vector3.Lerp(transform.position, targetPosition, Time.deltaTime * aimTransitionSpeed);
-    }
-
-
-
-    private void HandleMouseRotation()
-    {
-        if (isDeathView) return;
-
-        float sens = isAiming ? aimSensitivity : rotationSpeed;
-
-        mouseX += Input.GetAxis("Mouse X") * sens;
-        mouseY -= Input.GetAxis("Mouse Y") * sens;
-        mouseY = Mathf.Clamp(mouseY, -35f, 60f);
-    }
-
-    private void HandleAimInput()
-    {
         isAiming = Input.GetMouseButton(1);
 
-        // 조준 시 FOV 변경
-        float targetFov = isAiming ? 40f : 60f;
-        cam.fieldOfView = Mathf.Lerp(cam.fieldOfView, targetFov, Time.deltaTime * 5f);
+        // 상하 회전 제한
+        pitch = Mathf.Clamp(pitch, minPitch, maxPitch);
+
+        // 카메라 회전 적용 (Pitch만)
+        transform.localRotation = Quaternion.Euler(pitch, 0, 0);
+
+        // 플레이어 Yaw 회전
+        if (cameraPivot != null && cameraPivot.parent != null)
+        {
+            // cameraPivot.parent.rotation = Quaternion.Euler(0, yaw, 0);
+            if (playerMovement != null) {
+                // playerMovement.transform.rotation = Quaternion.Euler(0, yaw, 0);
+                cameraPivot.localRotation = Quaternion.Euler(0, yaw, 0);
+            }
+        }
     }
 
-    // -------- 이벤트 핸들러 --------
-    public void OnPlayerDeath()
+    private void HandleCameraPosition()
     {
-        isDeathView = true;
-        deathViewRotation = Quaternion.Euler(45f, 0f, 0f);
-    }
+        if (cameraPivot == null) return;
 
-    public void OnPlayerRespawn()
-    {
-        isDeathView = false;
+        // FPS 카메라는 항상 머리 위치에서 갱신됨
+        transform.position = cameraPivot.position;
     }
 }
