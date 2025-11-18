@@ -23,14 +23,20 @@ public class PlayerMovement : NetworkBehaviour
 
     private CharacterController controller;
     private Animator animator;
-
-    private Vector3 velocity;             // 수직 속도(중력/점프)
-    private Vector3 currentMoveVelocity;  // 실제 이동 벡터 (가속/감속 반영)
-
-    private bool isGrounded;              // 땅에 닿았는지
-    private bool isCrouching;             // 앉은 상태인지
-    // private NetworkCharacterController netCC;
     private CameraController localCam;
+
+    // ⭐ 네트워크 동기화 변수들
+    [Networked] public float NetworkedYaw { get; set; }
+    [Networked] private Vector3 NetworkedVelocity { get; set; }           // 수직 속도(중력/점프)
+    [Networked] private Vector3 NetworkedMoveVelocity { get; set; }       // 이동 벡터
+    [Networked] private NetworkBool NetworkedIsGrounded { get; set; }     // 땅에 닿았는지
+    [Networked] private NetworkBool NetworkedIsCrouching { get; set; }    // 앉은 상태인지
+
+    // 로컬 변수 (계산용)
+    private Vector3 velocity;
+    private Vector3 currentMoveVelocity;
+    private bool isGrounded;
+    private bool isCrouching;
 
     // 네트워크로 스폰될 때 호출됨
     public override void Spawned()
@@ -89,18 +95,27 @@ public class PlayerMovement : NetworkBehaviour
     // Fusion의 FixedUpdateNetwork() — 네트워크 프레임마다 실행됨
     public override void FixedUpdateNetwork()
     {
-        if (!GetInput(out NetworkInputData data))
-            return;
+        // ⭐ StateAuthority(서버/호스트)만 물리 시뮬레이션 실행
+        // CharacterController는 Transform을 직접 수정하므로 StateAuthority에서만 실행해야 함
+        if (Object.HasStateAuthority)
+        {
+            // InputAuthority가 있는 플레이어의 입력만 가져옴
+            if (GetInput(out NetworkInputData data))
+            {
+                HandleMovement(data);
+            }
+        }
 
-        HandleMovement(data);
+        // 모든 클라이언트에서 애니메이션 실행 (NetworkTransform이 위치 동기화)
         HandleAnimation();
     }
 
     //   이동 처리
     private void HandleMovement(NetworkInputData data)
     {
-        if (localCam == null)
-        return; // 카메라 초기화 전에는 이동 처리 안 함
+        // ⭐ Input Authority를 가진 로컬 플레이어만 카메라가 필요함
+        if (Object.HasInputAuthority && localCam == null)
+            return; // 카메라 초기화 전에는 이동 처리 안 함
 
         // --- 땅 체크 ---
         isGrounded = controller.isGrounded;
@@ -121,34 +136,34 @@ public class PlayerMovement : NetworkBehaviour
             controller.center = new Vector3(0, standingHeight / 2, 0);
         }
 
-        // --- 카메라 기준 이동 방향 계산 ---
-        Transform cam = localCam.transform;
+        // --- 캐릭터 회전 및 이동 방향 계산 ---
+        // ⭐ 입력 권한이 있는 플레이어만 Yaw 업데이트
+        Debug.Log($"[PlayerMovement] HandleMovement 시작 | HasInputAuthority: {Object.HasInputAuthority} | data.cameraYaw: {data.cameraYaw:F1}");
 
-        Vector3 camForward = cam.forward;
-        Vector3 camRight = cam.right;
-        camForward.y = 0; camForward.Normalize();
-        camRight.y = 0; camRight.Normalize();
+        if (Object.HasInputAuthority)
+        {
+            Debug.Log($"[PlayerMovement] ⭐ NetworkedYaw 업데이트 전: {NetworkedYaw:F1} → 후: {data.cameraYaw:F1}");
+            NetworkedYaw = data.cameraYaw;
+        }
 
-        Vector3 inputDirection = camRight * data.moveInput.x + camForward * data.moveInput.y;
+        // 디버그 로그
+        if (Object.HasInputAuthority)
+        {
+            Debug.Log($"[Local] Player {Object.InputAuthority} | Yaw: {NetworkedYaw:F1} | Input: {data.moveInput} | Pos: {transform.position}");
+        }
+        else
+        {
+            Debug.Log($"[Remote] Player {Object.InputAuthority} | Yaw: {NetworkedYaw:F1} | Input: {data.moveInput} | Pos: {transform.position}");
+        }
 
-        // float yaw = localCam.GetYaw();
-        // Quaternion yawRot = Quaternion.Euler(0, yaw, 0);
+        // 모든 플레이어가 네트워크 동기화된 Yaw 기준으로 회전
+        transform.rotation = Quaternion.Euler(0, NetworkedYaw, 0);
 
-        // Vector3 forward = yawRot * Vector3.forward;
-        // Vector3 right   = yawRot * Vector3.right;
-
-        // Vector3 inputDirection = right * data.moveInput.x + forward * data.moveInput.y;
-
-
-        // --- 캐릭터 회전 (Yaw)(이동 방향 바라보기) ---
-        float yaw = localCam.GetYaw();
-        transform.rotation = Quaternion.Euler(0, yaw, 0);
-
-        // if (inputDirection.magnitude > 0.1f)
-        // {
-        //     Quaternion targetRot = Quaternion.LookRotation(inputDirection);
-        //     transform.rotation = Quaternion.Slerp(transform.rotation, targetRot, 10f * Runner.DeltaTime);
-        // }
+        // 이동 방향 계산 (NetworkedYaw 기준)
+        Quaternion yawRotation = Quaternion.Euler(0, NetworkedYaw, 0);
+        Vector3 forward = yawRotation * Vector3.forward;
+        Vector3 right = yawRotation * Vector3.right;
+        Vector3 inputDirection = right * data.moveInput.x + forward * data.moveInput.y;
 
         // --- 이동 속도 결정 (걷기 / 뛰기 / 앉기) ---
         float targetSpeed =
@@ -174,7 +189,7 @@ public class PlayerMovement : NetworkBehaviour
             }
         }
 
-        // 실제 이동 적용
+        // 실제 이동 적용 (CharacterController가 Transform 직접 변경)
         controller.Move(currentMoveVelocity * Runner.DeltaTime);
 
         // --- 점프 처리 ---
@@ -185,10 +200,15 @@ public class PlayerMovement : NetworkBehaviour
         velocity.y += gravity * Runner.DeltaTime;
         controller.Move(velocity * Runner.DeltaTime);
 
-        // 서버(StateAuthority)가 controller 위치를 transform에 맞춰 동기화해야 다른 클라이언트에게 반영됨
-        if (Object.HasStateAuthority) {
-            transform.position = controller.transform.position;
-        }
+        // ⭐ 네트워크 변수 업데이트 (StateAuthority에서만 실행됨)
+        NetworkedVelocity = velocity;
+        NetworkedMoveVelocity = currentMoveVelocity;
+        NetworkedIsGrounded = isGrounded;
+        NetworkedIsCrouching = isCrouching;
+
+        // ⭐ CharacterController가 Transform을 직접 움직이고
+        // NetworkTransform이 자동으로 위치/회전을 모든 클라이언트에 동기화
+        // Networked 변수들도 자동 동기화됨
     }
 
     //   애니메이션 처리
@@ -196,15 +216,21 @@ public class PlayerMovement : NetworkBehaviour
     {
         if (animator == null) return;
 
+        // ⭐ StateAuthority에서 업데이트한 네트워크 변수를 사용
+        // 모든 클라이언트가 동기화된 값으로 애니메이션 실행
+        Vector3 moveVel = Object.HasStateAuthority ? currentMoveVelocity : NetworkedMoveVelocity;
+        bool grounded = Object.HasStateAuthority ? isGrounded : NetworkedIsGrounded;
+        bool crouching = Object.HasStateAuthority ? isCrouching : NetworkedIsCrouching;
+
         // 현재 이동 벡터를 로컬 공간 기준으로 변환
-        Vector3 localVel = transform.InverseTransformDirection(currentMoveVelocity);
+        Vector3 localVel = transform.InverseTransformDirection(moveVel);
 
         animator.SetFloat("Horizontal", localVel.x);
         animator.SetFloat("Vertical", localVel.z);
 
-        animator.SetBool("IsGrounded", isGrounded);
-        animator.SetBool("IsCrouching", isCrouching);
-        animator.SetBool("IsJumping", !isGrounded);
+        animator.SetBool("IsGrounded", grounded);
+        animator.SetBool("IsCrouching", crouching);
+        animator.SetBool("IsJumping", !grounded);
 
         // Speed(걷기/뛰기 전환값) — 로컬 플레이어에게만 적용
         float speedParam = Object.HasInputAuthority && Input.GetKey(KeyCode.LeftShift) ? 1f : 0f;

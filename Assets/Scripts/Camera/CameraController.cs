@@ -24,7 +24,11 @@ public class CameraController : NetworkBehaviour
     public float aimMoveLerpSpeed = 10f;
 
     public bool isAiming = false;
-    public float GetYaw() => yaw;
+    public float GetYaw()
+    {
+        Debug.Log($"[CameraController] GetYaw() 호출됨 | Yaw: {yaw:F1} | HasInputAuthority: {Object.HasInputAuthority}");
+        return yaw;
+    }
 
     public override void Spawned()
     {
@@ -50,16 +54,20 @@ public class CameraController : NetworkBehaviour
     void Start()
     {
         if (cam == null)
-        cam = GetComponent<Camera>();
+            cam = GetComponent<Camera>();
 
         if (cam != null) {
             cam.fieldOfView = normalFOV;
             Debug.Log("[CameraController] cam 초기화 완료");
         }
-        
 
-        Cursor.lockState = CursorLockMode.Locked;
-        Cursor.visible = false;
+        // ⭐ InputAuthority를 가진 로컬 플레이어만 커서 잠금
+        if (Object.HasInputAuthority)
+        {
+            Cursor.lockState = CursorLockMode.Locked;
+            Cursor.visible = false;
+            Debug.Log("[CameraController] 커서 잠금 완료");
+        }
 
         if (cameraPivot == null)
             Debug.LogError("[CameraController] cameraPivot이 연결되지 않았습니다!");
@@ -87,6 +95,12 @@ public class CameraController : NetworkBehaviour
         // 마우스 입력
         float mouseX = Input.GetAxis("Mouse X") * mouseSensitivity;
         float mouseY = Input.GetAxis("Mouse Y") * mouseSensitivity;
+
+        // 디버그: 마우스 입력 확인
+        if (mouseX != 0 || mouseY != 0)
+        {
+            Debug.Log($"[CameraController] Mouse - X: {mouseX:F2}, Y: {mouseY:F2} | Yaw: {yaw:F1}");
+        }
 
         yaw += mouseX;
         pitch -= mouseY;
