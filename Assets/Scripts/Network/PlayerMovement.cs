@@ -32,6 +32,10 @@ public class PlayerMovement : NetworkBehaviour
     
     private CameraController localCam;
 
+    private bool debugAfterRespawn = false;
+    private int debugFramesRemaining = 0;
+    private int freezeTicksAfterRespawn = 0;
+
     [Networked] public float NetworkYaw { get; set; } // 네트워크 회전값 추가
 
     // 네트워크로 스폰될 때 호출됨
@@ -45,6 +49,13 @@ public class PlayerMovement : NetworkBehaviour
         // 로컬 플레이어일 때만 카메라를 연결
         if (Object.HasInputAuthority)
             StartCoroutine(SetupCamera());
+    }
+
+    // PlayerState에서 부활 직후 호출할 함수
+    public void DebugLogAfterRespawn()
+    {
+        debugAfterRespawn = true;
+        debugFramesRemaining = 5; // 부활 후 5프레임만 로그 찍기
     }
 
     // 카메라 연결
@@ -84,12 +95,32 @@ public class PlayerMovement : NetworkBehaviour
         }
     }
 
-    public override void FixedUpdateNetwork() // 네트워크 프레임마다 실행됨
+    public void OnRespawnFreeze(int ticks = 1)
     {
+        // 여러 번 호출되면 더 긴 값 유지
+        freezeTicksAfterRespawn = Mathf.Max(freezeTicksAfterRespawn, ticks);
+    }
+
+    public override void FixedUpdateNetwork()
+    {
+        var state = GetComponent<PlayerState>();
+        if (state != null && state.IsDead)
+            return;
+
+        // ★ 리스폰 직후 N틱 동안 이동 완전 차단
+        if (freezeTicksAfterRespawn > 0)
+        {
+            freezeTicksAfterRespawn--;
+
+            // 속도도 깔끔하게 0으로
+            currentMoveVelocity = Vector3.zero;
+            velocity = Vector3.zero;
+            return;
+        }
+
         if (!GetInput(out NetworkInputData data))
             return;
 
-        // 움직임/애니메이션 네트워크 입력 동기화
         HandleMovement(data);
         HandleAnimation(data);
     }
@@ -196,6 +227,10 @@ public class PlayerMovement : NetworkBehaviour
             // if (Object.HasStateAuthority) {
             //     transform.position = controller.transform.position;
             // }
+    }
+
+    public void ResetMovementState() { 
+        velocity = Vector3.zero; currentMoveVelocity = Vector3.zero; 
     }
 
     //   애니메이션 처리

@@ -21,6 +21,7 @@ public class PlayerState : NetworkBehaviour
     private Rigidbody rb;
     private Animator animator;
     private CharacterController characterController;
+    private Spawner spawner;
 
     public override void Spawned()
     {
@@ -35,6 +36,10 @@ public class PlayerState : NetworkBehaviour
         rb = GetComponent<Rigidbody>();
         animator = GetComponent<Animator>();
         characterController = GetComponent<CharacterController>();
+
+        // ★ 서버에서만 부활 위치 스포너 참조
+        if (Object.HasStateAuthority)
+            spawner = Spawner.Instance ?? FindObjectOfType<Spawner>();
     }
 
     // ------- 입력 테스트(L, K) ------- //
@@ -129,20 +134,62 @@ public class PlayerState : NetworkBehaviour
     {
         if (!Object.HasStateAuthority) return;
 
-        Vector3 respawnPos = GetRandomEdgePosition();
-        Quaternion respawnRot = GetLookAtCenterRotation(respawnPos);
+        // ▼ 1) 스폰 포인트에서 위치/회전 가져오기
+        Vector3 respawnPos;
+        Quaternion respawnRot;
 
+        if (spawner != null)
+        {
+            Transform spawn = spawner.GetRandomSpawnPoint();
+            respawnPos = spawn.position;
+            respawnRot = spawn.rotation;
+        }
+        else
+        {
+            // 혹시 Spawner 못 찾았을 때 대비용 (필요 없으면 빼도 됨)
+            respawnPos = transform.position;
+            respawnRot = transform.rotation;
+        }
+
+        // ▼ 2) 체력/상태 초기화
         Hp = MaxHp;
         IsDead = false;
 
-        RPC_PlayRespawnAnimation(respawnPos, respawnRot);
+        var pm = GetComponent<PlayerMovement>();
+        if (pm != null)
+        {
+            pm.ResetMovementState();   // 기존 속도 초기화
+            pm.OnRespawnFreeze(1);     // ★ 이 틱 동안 이동 막기 (필요하면 2로 늘려도 됨)
+        }
+
+        if (characterController != null)
+            characterController.enabled = false;
+
+        if (rb != null)
+        {
+            rb.isKinematic = true;
+            rb.velocity = Vector3.zero;
+            rb.angularVelocity = Vector3.zero;
+        }
+
+        var nt = GetComponent<NetworkTransform>();
+        if (nt != null)
+            nt.Teleport(respawnPos, respawnRot);
+        else
+            transform.SetPositionAndRotation(respawnPos, respawnRot);
+
+        if (characterController != null)
+            characterController.enabled = true;
+
+        if (rb != null)
+            rb.isKinematic = false;
+
+        RPC_PlayRespawnAnimation();
     }
 
     [Rpc(RpcSources.StateAuthority, RpcTargets.All)]
-    private void RPC_PlayRespawnAnimation(Vector3 position, Quaternion rotation)
+    private void RPC_PlayRespawnAnimation()
     {
-        transform.SetPositionAndRotation(position, rotation);
-
         if (animator != null)
         {
             animator.SetBool("IsDead", false);
