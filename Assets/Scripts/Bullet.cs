@@ -24,8 +24,27 @@ public class Bullet : MonoBehaviour
 
     void OnCollisionEnter(Collision collision)
     {
-        // 플레이어 상태 탐지 (자식 콜라이더 대응)
-        var state = collision.collider.GetComponentInParent<PlayerState>();
+        HandleHit(collision.collider);
+    }
+
+    void OnTriggerEnter(Collider other)
+    {
+        HandleHit(other);
+    }
+
+    private void HandleHit(Collider target)
+    {
+        // 우선 히트박스가 있다면 멀티플라이어 적용
+        var hitbox = target.GetComponent<PlayerHitbox>() ?? target.GetComponentInParent<PlayerHitbox>();
+        if (hitbox != null)
+        {
+            hitbox.ApplyDamage(damage, shooterId);
+            Destroy(gameObject);
+            return;
+        }
+
+        // 히트박스가 없으면 기존 플레이어 상태를 직접 찾음
+        var state = target.GetComponentInParent<PlayerState>();
         if (state != null && !state.IsDead)
         {
             state.RPC_TakeDamage(damage, shooterId);
