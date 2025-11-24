@@ -14,10 +14,19 @@ public class PlayerSpawner : MonoBehaviour, INetworkRunnerCallbacks
     {
         if (runner.IsServer) {
             Debug.Log("[Fusion] 서버가 플레이어 스폰");
+
+            // 이미 스폰되어 있으면 중복 생성 방지
+            if (spawnedPlayers.ContainsKey(player))
+            {
+                Debug.LogWarning($"[Fusion] Player {player} already spawned, skip duplicate.");
+                return;
+            }
+
             Vector3 spawnPos = new Vector3(UnityEngine.Random.Range(-5f, 5f), 1f, UnityEngine.Random.Range(-5f, 5f));
 
             var obj = runner.Spawn(playerPrefab, spawnPos, Quaternion.identity, player);
             spawnedPlayers[player] = obj;
+            runner.SetPlayerObject(player, obj);
             Debug.Log($"[Fusion] Player spawned: {player} (loyalty: server)");
         }
     }
@@ -34,6 +43,10 @@ public class PlayerSpawner : MonoBehaviour, INetworkRunnerCallbacks
             }
             spawnedPlayers.Remove(player);
         }
+
+        // PlayerObject 매핑 해제
+        if (runner.IsServer)
+            runner.SetPlayerObject(player, null);
     }
 
     // 클라이언트의 입력을 Fusion 네트워크로 전달

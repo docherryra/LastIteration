@@ -3138,6 +3138,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: Player
       objectReference: {fileID: 0}
+    - target: {fileID: 4478991402482163089, guid: bc07a3ab3dee041b8838e5068eaa9b79, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 5348790621573636792, guid: bc07a3ab3dee041b8838e5068eaa9b79, type: 3}
       propertyPath: SortKey
       value: 3107963091
