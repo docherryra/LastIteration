@@ -11,6 +11,7 @@ public class NetworkRunnerHandler : MonoBehaviour, INetworkRunnerCallbacks
 {
     [Header("Session Settings")]
     [SerializeField] private string sessionName = "SingleRoom";
+    [SerializeField] private SceneRef gameScene; // 실제 플레이 씬 (메인 메뉴-> 이동)
 
     private NetworkRunner _runner;
     private PlayerSpawner _spawner;
@@ -69,11 +70,16 @@ public class NetworkRunnerHandler : MonoBehaviour, INetworkRunnerCallbacks
 
         Debug.Log($"[Fusion] 세션 리스트 업데이트 (총 {sessionList.Count}개)");
 
+        // 메인 메뉴에서 버튼을 누를 때, 실제 게임 씬을 네트워크 씬으로 등록
+        var targetScene = gameScene.IsValid
+            ? gameScene
+            : SceneRef.FromIndex(SceneManager.GetActiveScene().buildIndex);
+
         StartGameArgs args = new StartGameArgs()
         {
             SessionName = sessionName,
             CustomPhotonAppSettings = PhotonAppSettings.Global.AppSettings,
-            Scene = SceneRef.FromIndex(SceneManager.GetActiveScene().buildIndex),
+            Scene = targetScene,
             SceneManager = gameObject.AddComponent<NetworkSceneManagerDefault>()
         };
 
@@ -92,12 +98,12 @@ public class NetworkRunnerHandler : MonoBehaviour, INetworkRunnerCallbacks
         if (roomExists)
         {
             args.GameMode = GameMode.Client;
-            Debug.Log("▶ 자동 판단: 기존 방 존재 → Client로 접속");
+            Debug.Log("기존 방 존재 → Client로 접속");
         }
         else
         {
             args.GameMode = GameMode.Host;
-            Debug.Log("▶ 자동 판단: 방 없음 → Host로 생성");
+            Debug.Log("방 없음 → Host로 생성");
         }
 
         _ = StartRunner(args);
