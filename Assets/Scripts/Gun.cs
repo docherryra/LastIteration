@@ -51,6 +51,8 @@ public class Gun : MonoBehaviour
     private bool isReloading = false;
     private Vector3 magOriginalPosition;
 
+    private PlayerState playerState;
+
     private int shotSeq = 0;
 
     void Start()
@@ -63,6 +65,9 @@ public class Gun : MonoBehaviour
 
         if (audioSource == null)
             audioSource = GetComponent<AudioSource>();
+
+        playerState = GetComponentInParent<PlayerState>();
+
         if (ammoText == null)
         {
             GameObject ammoObj = GameObject.Find("AmmoText");
@@ -78,7 +83,12 @@ public class Gun : MonoBehaviour
     {
         var netObj = GetComponentInParent<NetworkObject>();
         if (netObj != null && !netObj.HasInputAuthority)
-            return; // ?꾨줉?쒖뿉???낅젰 泥섎━/珥앹븣 ?앹꽦 諛⑹?
+            return;  // 조건 부분에서 입력 처리 / 전체 배열 생성 부분
+
+
+        //플레이어가 죽어있으면 총기가 발사되지 않도록 설정
+        if (playerState != null && playerState.IsDead)
+            return;
 
         if (isReloading) return;
 
