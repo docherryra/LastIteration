@@ -162,17 +162,13 @@ public class PlayerMovement : NetworkBehaviour
         if (!GetInput(out NetworkInputData data))
             return;
 
-        // 서버만 이동 계산
         if (Object.HasStateAuthority)
-        {
-            HandleMovementServer(data);
-        }
+            HandleMovement(data);
 
-        // 애니메이션은 모두 공통으로
         HandleAnimation(data);
     }
 
-    private void HandleMovementServer(NetworkInputData data)
+    private void HandleMovement(NetworkInputData data)
     {
         NetworkYaw += data.mouseDeltaX * mouseSensitivity;
 
