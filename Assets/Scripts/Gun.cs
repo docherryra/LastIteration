@@ -62,7 +62,13 @@ public class Gun : MonoBehaviour
         if (magTransform != null) magOriginalPosition = magTransform.localPosition;
 
         if (playerCamera == null)
-            playerCamera = Camera.main;
+        {
+            var camController = GetComponentInParent<NetworkObject>()?.GetComponentInChildren<CameraController>(true);
+            if (camController != null)
+                playerCamera = camController.GetComponent<Camera>();
+            else
+                playerCamera = Camera.main;
+        }
 
         if (audioSource == null)
             audioSource = GetComponent<AudioSource>();

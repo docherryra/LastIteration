@@ -51,6 +51,7 @@ public class Shotgun : MonoBehaviour
     private Vector3 magOriginalPosition;
     private int shotSeq = 0;
     private WeaponManager weaponManager;
+    private PlayerState playerState;
 
     void Start()
     {
@@ -58,7 +59,13 @@ public class Shotgun : MonoBehaviour
         if (magTransform != null) magOriginalPosition = magTransform.localPosition;
 
         if (playerCamera == null)
-            playerCamera = Camera.main;
+        {
+            var camController = GetComponentInParent<NetworkObject>()?.GetComponentInChildren<CameraController>(true);
+            if (camController != null)
+                playerCamera = camController.GetComponent<Camera>();
+            else
+                playerCamera = Camera.main;
+        }
 
         if (audioSource == null)
             audioSource = GetComponent<AudioSource>();
@@ -69,6 +76,7 @@ public class Shotgun : MonoBehaviour
         }
 
         weaponManager = GetComponentInParent<WeaponManager>();
+        playerState = GetComponentInParent<PlayerState>();
         UpdateAmmoUI();
     }
 
@@ -76,6 +84,10 @@ public class Shotgun : MonoBehaviour
     {
         var netObj = GetComponentInParent<NetworkObject>();
         if (netObj != null && !netObj.HasInputAuthority)
+            return;
+
+        // 플레이어가 죽었으면 발사 안함
+        if (playerState != null && playerState.IsDead)
             return;
 
         if (isReloading) return;
