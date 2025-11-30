@@ -12,6 +12,7 @@ public class EndSceneUI : MonoBehaviour
     private void OnEnable()
     {
         UpdateLabels();
+        InitializeCursor();
     }
 
     private void Start()
@@ -25,6 +26,12 @@ public class EndSceneUI : MonoBehaviour
         {
             goToMainButton.onClick.AddListener(GoToMainScene);
         }
+    }
+
+    private void InitializeCursor()
+    {
+        Cursor.lockState = CursorLockMode.None;
+        Cursor.visible = true;
     }
 
     public void UpdateLabels()
@@ -48,7 +55,7 @@ public class EndSceneUI : MonoBehaviour
         {
             networkHandler.ShutdownNetwork();
         }
-
+        InitializeCursor();
         SceneManager.LoadScene("menuScene");
     }
 }
