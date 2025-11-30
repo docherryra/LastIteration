@@ -5,21 +5,21 @@ using UnityEngine.UI;
 
 public class Gun : MonoBehaviour
 {
-    [Header("ÃÑ¾Ë ¼³Á¤")]
+    [Header("ï¿½Ñ¾ï¿½ ï¿½ï¿½ï¿½ï¿½")]
     [SerializeField] private GameObject bulletPrefab;
     [SerializeField] private Transform firePoint;
 
-    [Header("¹ß»ç ¼³Á¤")]
+    [Header("ï¿½ß»ï¿½ ï¿½ï¿½ï¿½ï¿½")]
     [SerializeField] private float fireRate = 0.5f;
     [SerializeField] private KeyCode fireKey = KeyCode.Mouse0;
 
-    [Header("ÅºÃ¢ ¼³Á¤")]
+    [Header("ÅºÃ¢ ï¿½ï¿½ï¿½ï¿½")]
     [SerializeField] private int maxAmmo = 10;
     [SerializeField] private float reloadTime = 2f;
     [SerializeField] private bool autoReload = true;
     [SerializeField] private KeyCode reloadKey = KeyCode.R;
 
-    [Header("ÀçÀåÀü ¾Ö´Ï¸ŞÀÌ¼Ç")]
+    [Header("ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ö´Ï¸ï¿½ï¿½Ì¼ï¿½")]
     [SerializeField] private Transform magTransform;
     [SerializeField] private float magDropDistance = 0.5f;
     [SerializeField] private float magDropSpeed = 2f;
@@ -54,6 +54,7 @@ public class Gun : MonoBehaviour
     private PlayerState playerState;
 
     private int shotSeq = 0;
+    private WeaponManager weaponManager;
 
     void Start()
     {
@@ -67,6 +68,7 @@ public class Gun : MonoBehaviour
             audioSource = GetComponent<AudioSource>();
 
         playerState = GetComponentInParent<PlayerState>();
+        weaponManager = GetComponentInParent<WeaponManager>();
 
         if (ammoText == null)
         {
@@ -83,16 +85,16 @@ public class Gun : MonoBehaviour
     {
         var netObj = GetComponentInParent<NetworkObject>();
         if (netObj != null && !netObj.HasInputAuthority)
-            return;  // Á¶°Ç ºÎºĞ¿¡¼­ ÀÔ·Â Ã³¸® / ÀüÃ¼ ¹è¿­ »ı¼º ºÎºĞ
+            return;  // ï¿½ï¿½ï¿½ï¿½ ï¿½ÎºĞ¿ï¿½ï¿½ï¿½ ï¿½Ô·ï¿½ Ã³ï¿½ï¿½ / ï¿½ï¿½Ã¼ ï¿½è¿­ ï¿½ï¿½ï¿½ï¿½ ï¿½Îºï¿½
 
 
-        //ÇÃ·¹ÀÌ¾î°¡ Á×¾îÀÖÀ¸¸é ÃÑ±â°¡ ¹ß»çµÇÁö ¾Êµµ·Ï ¼³Á¤
+        //ï¿½Ã·ï¿½ï¿½Ì¾î°¡ ï¿½×¾ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ñ±â°¡ ï¿½ß»ï¿½ï¿½ï¿½ï¿½ ï¿½Êµï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
         if (playerState != null && playerState.IsDead)
             return;
 
         if (isReloading) return;
 
-        // ?˜ë™ ?¥ì „
+        // ?ï¿½ë™ ?ï¿½ì „
         if (Input.GetKeyDown(reloadKey))
         {
             if (currentAmmo < maxAmmo) StartCoroutine(Reload());
@@ -120,7 +122,10 @@ public class Gun : MonoBehaviour
         Ray ray = playerCamera.ViewportPointToRay(new Vector3(0.5f, 0.5f, 0f));
         Vector3 targetPoint;
 
-        if (audioSource != null && fireSound != null)
+        // ë°œì‚¬ ì†Œë¦¬ë¥¼ ëª¨ë“  í´ë¼ì´ì–¸íŠ¸ì— ë¸Œë¡œë“œìºìŠ¤íŠ¸
+        if (weaponManager != null)
+            weaponManager.BroadcastFireSound(fireSound, fireSoundVolume);
+        else if (audioSource != null && fireSound != null)
             audioSource.PlayOneShot(fireSound, fireSoundVolume);
 
         if (Physics.Raycast(ray, out RaycastHit hit, maxRayDistance))
@@ -141,7 +146,7 @@ public class Gun : MonoBehaviour
         Vector3 direction = (targetPoint - firePoint.position).normalized;
         var bulletGo = Instantiate(bulletPrefab, firePoint.position, Quaternion.LookRotation(direction));
 
-        // ë°œì‚¬???°ë?ì§€ ?¤ì •
+        // ë°œì‚¬???ï¿½ï¿½?ì§€ ?ï¿½ì •
         var b = bulletGo.GetComponent<Bullet>();
         if (b != null)
         {
@@ -162,11 +167,11 @@ public class Gun : MonoBehaviour
     {
         isReloading = true;
 
-        // ÀçÀåÀü »ç¿îµå Àç»ı (µğ¹ö±× Ãß°¡)
-        Debug.Log("ÀçÀåÀü ½ÃÀÛ!");
+        // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ (ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ß°ï¿½)
+        Debug.Log("ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½!");
         if (audioSource != null && reloadSound != null)
         {
-            Debug.Log("ÀçÀåÀü »ç¿îµå Àç»ı!");
+            Debug.Log("ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½!");
             audioSource.PlayOneShot(reloadSound, reloadSoundVolume);
         }
         else
@@ -211,14 +216,14 @@ public class Gun : MonoBehaviour
         isReloading = false;
     }
 
-    // Åº¾à UI ¾÷µ¥ÀÌÆ® ÇÔ¼ö
+    // Åºï¿½ï¿½ UI ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æ® ï¿½Ô¼ï¿½
     private void UpdateAmmoUI()
     {
         if (ammoText != null)
         {
             ammoText.text = $"{currentAmmo} / {maxAmmo}";
 
-            // ÃÑ¾ËÀÌ ¾øÀ» ¶§ »¡°£»öÀ¸·Î Ç¥½Ã (¼±ÅÃ»çÇ×)
+            // ï¿½Ñ¾ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ Ç¥ï¿½ï¿½ (ï¿½ï¿½ï¿½Ã»ï¿½ï¿½ï¿½)
             if (currentAmmo == 0)
             {
                 ammoText.color = Color.red;
@@ -234,7 +239,7 @@ public class Gun : MonoBehaviour
         }
     }
 
-    // ê³µê²©???ë³„: PlayerRef.RawEncoded ?¬ìš© (?†ìœ¼ë©?-1)
+    // ê³µê²©???ï¿½ë³„: PlayerRef.RawEncoded ?ï¿½ìš© (?ï¿½ìœ¼ï¿½?-1)
     private int GetShooterId()
     {
         var netObj = GetComponentInParent<NetworkObject>();

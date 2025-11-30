@@ -9,7 +9,7 @@ public class WeaponManager : NetworkBehaviour
     [SerializeField] private GameObject shotgunPrefab;
     [SerializeField] private GameObject pistolPrefab;
 
-    // ³×Æ®¿öÅ© µ¿±âÈ­µÇ´Â ÇöÀç ¹«±â Å¸ÀÔ
+    // ï¿½ï¿½Æ®ï¿½ï¿½Å© ï¿½ï¿½ï¿½ï¿½È­ï¿½Ç´ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ Å¸ï¿½ï¿½
     [Networked] private int CurrentWeaponType { get; set; }
 
     private GameObject currentWeaponInstance;
@@ -23,37 +23,37 @@ public class WeaponManager : NetworkBehaviour
 
         if (Object.HasStateAuthority)
         {
-            // ¼­¹ö°¡ ÃÊ±â ¹«±â ¼³Á¤
-            CurrentWeaponType = 0; // ¼ÒÃÑÀ¸·Î ½ÃÀÛ
+            // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ê±ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
+            CurrentWeaponType = 0; // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
         }
 
-        // ¸ðµç Å¬¶óÀÌ¾ðÆ®°¡ ¹«±â »ý¼º
+        // ï¿½ï¿½ï¿½ Å¬ï¿½ï¿½ï¿½Ì¾ï¿½Æ®ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
         UpdateWeaponVisual();
     }
 
     private void Update()
     {
-        // Å×½ºÆ®¿ë Å° ÀÔ·Â
+        // ï¿½×½ï¿½Æ®ï¿½ï¿½ Å° ï¿½Ô·ï¿½
         if (Object.HasInputAuthority)
         {
             if (Input.GetKeyDown(KeyCode.Alpha1))
             {
-                Debug.Log("Å×½ºÆ®: ¼ÒÃÑÀ¸·Î º¯°æ");
+                Debug.Log("ï¿½×½ï¿½Æ®: ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½");
                 RPC_RequestWeaponChange(0);
             }
             else if (Input.GetKeyDown(KeyCode.Alpha2))
             {
-                Debug.Log("Å×½ºÆ®: ¼¦°ÇÀ¸·Î º¯°æ");
+                Debug.Log("ï¿½×½ï¿½Æ®: ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½");
                 RPC_RequestWeaponChange(1);
             }
             else if (Input.GetKeyDown(KeyCode.Alpha3))
             {
-                Debug.Log("Å×½ºÆ®: ±ÇÃÑÀ¸·Î º¯°æ");
+                Debug.Log("ï¿½×½ï¿½Æ®: ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½");
                 RPC_RequestWeaponChange(2);
             }
         }
 
-        // ¼­¹ö¸¸ Å³ ¼ö¿¡ µû¸¥ ¹«±â º¯°æ Ã³¸®
+        // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ Å³ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ Ã³ï¿½ï¿½
         if (Object.HasStateAuthority)
         {
             if (playerState != null)
@@ -67,7 +67,7 @@ public class WeaponManager : NetworkBehaviour
             }
         }
 
-        // ¸ðµç Å¬¶óÀÌ¾ðÆ®: ¹«±â Å¸ÀÔÀÌ º¯°æµÇ¸é ½Ã°¢Àû ¾÷µ¥ÀÌÆ®
+        // ï¿½ï¿½ï¿½ Å¬ï¿½ï¿½ï¿½Ì¾ï¿½Æ®: ï¿½ï¿½ï¿½ï¿½ Å¸ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½Ç¸ï¿½ ï¿½Ã°ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æ®
         if (CurrentWeaponType != lastWeaponType)
         {
             lastWeaponType = CurrentWeaponType;
@@ -78,7 +78,7 @@ public class WeaponManager : NetworkBehaviour
     [Rpc(RpcSources.InputAuthority, RpcTargets.StateAuthority)]
     private void RPC_RequestWeaponChange(int weaponType)
     {
-        // ¼­¹ö°¡ ¹«±â Å¸ÀÔ º¯°æ ½ÂÀÎ
+        // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ Å¸ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
         CurrentWeaponType = weaponType;
     }
 
@@ -98,23 +98,23 @@ public class WeaponManager : NetworkBehaviour
     private int GetWeaponTypeByKills(int kills)
     {
         if (kills >= 10 && kills <= 15)
-            return 2; // ±ÇÃÑ
+            return 2; // ï¿½ï¿½ï¿½ï¿½
         else if (kills >= 5 && kills <= 9)
-            return 1; // ¼¦°Ç
+            return 1; // ï¿½ï¿½ï¿½ï¿½
         else
-            return 0; // ¼ÒÃÑ
+            return 0; // ï¿½ï¿½ï¿½ï¿½
     }
 
     private void UpdateWeaponVisual()
     {
-        // ±âÁ¸ ¹«±â Á¦°Å
+        // ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
         if (currentWeaponInstance != null)
         {
             Destroy(currentWeaponInstance);
             currentWeaponInstance = null;
         }
 
-        // ¹«±â Å¸ÀÔ¿¡ µû¶ó ÇÁ¸®ÆÕ ¼±ÅÃ
+        // ï¿½ï¿½ï¿½ï¿½ Å¸ï¿½Ô¿ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
         GameObject weaponPrefab = null;
         string weaponName = "";
 
@@ -122,19 +122,19 @@ public class WeaponManager : NetworkBehaviour
         {
             case 0:
                 weaponPrefab = riflePrefab;
-                weaponName = "¼ÒÃÑ";
+                weaponName = "ï¿½ï¿½ï¿½ï¿½";
                 break;
             case 1:
                 weaponPrefab = shotgunPrefab;
-                weaponName = "¼¦°Ç";
+                weaponName = "ï¿½ï¿½ï¿½ï¿½";
                 break;
             case 2:
                 weaponPrefab = pistolPrefab;
-                weaponName = "±ÇÃÑ";
+                weaponName = "ï¿½ï¿½ï¿½ï¿½";
                 break;
         }
 
-        // »õ ¹«±â »ý¼º (·ÎÄÃ¿¡¼­¸¸)
+        // ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ (ï¿½ï¿½ï¿½Ã¿ï¿½ï¿½ï¿½ï¿½ï¿½)
         if (weaponPrefab != null && gunPoint != null)
         {
             currentWeaponInstance = Instantiate(weaponPrefab, gunPoint);
@@ -153,5 +153,33 @@ public class WeaponManager : NetworkBehaviour
     public int GetCurrentWeaponType()
     {
         return CurrentWeaponType;
+    }
+
+    // ë°œì‚¬ ì†Œë¦¬ë¥¼ ëª¨ë“  í´ë¼ì´ì–¸íŠ¸ì— ë¸Œë¡œë“œìºìŠ¤íŠ¸
+    public void BroadcastFireSound(AudioClip clip, float volume)
+    {
+        if (clip == null) return;
+        RPC_PlayFireSound(CurrentWeaponType, volume);
+    }
+
+    [Rpc(RpcSources.InputAuthority, RpcTargets.All)]
+    private void RPC_PlayFireSound(int weaponType, float volume)
+    {
+        if (currentWeaponInstance == null) return;
+
+        AudioSource audio = currentWeaponInstance.GetComponent<AudioSource>();
+        if (audio == null) return;
+
+        AudioClip clip = null;
+        var gun = currentWeaponInstance.GetComponent<Gun>();
+        var shotgun = currentWeaponInstance.GetComponent<Shotgun>();
+
+        if (gun != null)
+            clip = gun.fireSound;
+        else if (shotgun != null)
+            clip = shotgun.fireSound;
+
+        if (clip != null)
+            audio.PlayOneShot(clip, volume);
     }
 }

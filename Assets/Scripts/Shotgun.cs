@@ -50,6 +50,7 @@ public class Shotgun : MonoBehaviour
     private bool isReloading = false;
     private Vector3 magOriginalPosition;
     private int shotSeq = 0;
+    private WeaponManager weaponManager;
 
     void Start()
     {
@@ -67,6 +68,7 @@ public class Shotgun : MonoBehaviour
             ammoText = GameObject.Find("AmmoText")?.GetComponent<Text>();
         }
 
+        weaponManager = GetComponentInParent<WeaponManager>();
         UpdateAmmoUI();
     }
 
@@ -108,7 +110,10 @@ public class Shotgun : MonoBehaviour
 
         Debug.Log("[Shotgun] Fire called!");
 
-        if (audioSource != null && fireSound != null)
+        // 발사 소리를 모든 클라이언트에 브로드캐스트
+        if (weaponManager != null)
+            weaponManager.BroadcastFireSound(fireSound, fireSoundVolume);
+        else if (audioSource != null && fireSound != null)
             audioSource.PlayOneShot(fireSound, fireSoundVolume);
 
         // 중앙 레이 계산
