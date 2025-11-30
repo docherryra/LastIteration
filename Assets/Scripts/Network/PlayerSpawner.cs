@@ -9,6 +9,15 @@ public class PlayerSpawner : MonoBehaviour, INetworkRunnerCallbacks
     [SerializeField] private GameObject playerPrefab;
     private readonly Dictionary<PlayerRef, NetworkObject> spawnedPlayers = new Dictionary<PlayerRef, NetworkObject>();
 
+    // 마우스 델타 누적용
+    private float accumulatedMouseX = 0f;
+
+    // 매 프레임 마우스 X 델타 누적
+    private void Update()
+    {
+        accumulatedMouseX += Input.GetAxisRaw("Mouse X");
+    }
+
     // 플레이어가 룸에 입장했을 때 호출됨
     public void OnPlayerJoined(NetworkRunner runner, PlayerRef player)
     {
@@ -62,7 +71,10 @@ public class PlayerSpawner : MonoBehaviour, INetworkRunnerCallbacks
         data.jumpPressed = Input.GetKeyDown(KeyCode.Space); //  점프 입력
         data.runHeld = Input.GetKey(KeyCode.LeftShift); //  달리기 입력
         data.crouchHeld = Input.GetKey(KeyCode.LeftControl); //  앉기 입력
-        data.mouseDeltaX = Input.GetAxisRaw("Mouse X"); // 마우스 X 회전 입력
+
+        // 누적된 마우스 X 델타 사용 후 리셋
+        data.mouseDeltaX = accumulatedMouseX;
+        accumulatedMouseX = 0f;
 
         input.Set(data);
     }

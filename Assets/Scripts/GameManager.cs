@@ -180,20 +180,10 @@ public class GameManager : NetworkBehaviour
         if (state == null)
             return "Unknown";
 
-        if (state.Object != null)
-        {
-            var authority = state.Object.InputAuthority;
+        string nickname = state.GetNickname();
+        if (!string.IsNullOrEmpty(nickname))
+            return nickname;
 
-            foreach (var player in Runner.ActivePlayers)
-            {
-                if (player == authority)
-                    return player.ToString();
-            }
-
-            if (authority != PlayerRef.None)
-                return authority.ToString();
-        }
-
-        return state.name;
+        return "Unknown";
     }
 }
