@@ -1,15 +1,30 @@
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.SceneManagement;
 
 public class EndSceneUI : MonoBehaviour
 {
     [SerializeField] private Text endTitleText;
     [SerializeField] private Text reasonText;
     [SerializeField] private Text winnerText;
+    [SerializeField] private Button goToMainButton;
 
     private void OnEnable()
     {
         UpdateLabels();
+    }
+
+    private void Start()
+    {
+        if (goToMainButton == null)
+        {
+            goToMainButton = GameObject.Find("GoToMainButton")?.GetComponent<Button>();
+        }
+
+        if (goToMainButton != null)
+        {
+            goToMainButton.onClick.AddListener(GoToMainScene);
+        }
     }
 
     public void UpdateLabels()
@@ -24,5 +39,16 @@ public class EndSceneUI : MonoBehaviour
 
         if (winnerText != null)
             winnerText.text = string.IsNullOrEmpty(winnerLine) ? "Winner: N/A" : winnerLine;
+    }
+
+    public void GoToMainScene()
+    {
+        var networkHandler = FindObjectOfType<NetworkRunnerHandler>();
+        if (networkHandler != null)
+        {
+            networkHandler.ShutdownNetwork();
+        }
+
+        SceneManager.LoadScene("menuScene");
     }
 }

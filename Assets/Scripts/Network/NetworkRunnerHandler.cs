@@ -141,6 +141,18 @@ public class NetworkRunnerHandler : MonoBehaviour, INetworkRunnerCallbacks
         }
     }
 
+    public async void ShutdownNetwork()
+    {
+        if (_runner != null && _runner.IsRunning)
+        {
+            await _runner.Shutdown();
+        }
+
+        _isStarting = false;
+        _waitingForSessionList = false;
+        Destroy(gameObject);
+    }
+
     // ===== 필요 없는 콜백들 (전부 빈 함수로 구현) =====
     public void OnPlayerJoined(NetworkRunner runner, PlayerRef player) { }
     public void OnPlayerLeft(NetworkRunner runner, PlayerRef player) { }
