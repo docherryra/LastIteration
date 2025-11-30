@@ -5,6 +5,7 @@ public class PlayerState : NetworkBehaviour
 {
     [Networked] public NetworkString<_64> UserId { get; set; }
     [Networked] public NetworkString<_32> Nickname { get; set; }
+    [Networked] private NetworkBool HasAnnouncedJoin { get; set; }
     [Networked] public float Hp { get; set; } = 100f;
     [Networked] public float MaxHp { get; set; } = 100f;
     [Networked] public float Kill { get; set; } = 0f;
@@ -61,6 +62,13 @@ public class PlayerState : NetworkBehaviour
         UserId = userId;
         Nickname = nickname;
         Debug.Log($"[PlayerState] User info set: userId={userId}, nickname={nickname}");
+
+        // StateAuthority에서 최초로 닉네임이 설정되면 입장 로그 전파
+        if (Object.HasStateAuthority && !HasAnnouncedJoin)
+        {
+            HasAnnouncedJoin = true;
+            RPC_AnnounceJoin(nickname);
+        }
     }
 
     // Input 테스트용 (L: instant death, K: 10 damage)
@@ -120,6 +128,7 @@ public class PlayerState : NetworkBehaviour
 
         if (attackerId >= 0)
             AddKillToAttacker(attackerId);
+        RPC_AnnounceKill(attackerId, Nickname.ToString());
 
         RespawnTimer = TickTimer.CreateFromSeconds(Runner, respawnDelay);
         Debug.Log($"[PlayerState] RespawnTimer started for {respawnDelay}s (IsDead={IsDead})");
@@ -327,5 +336,45 @@ public class PlayerState : NetworkBehaviour
         {
             Debug.LogWarning($"[PlayerState] AddKillToAttacker: attackerRawId={attackerRawId} not found in ActivePlayers");
         }
+    }
+
+    // ----- 로그 전파 -----
+    [Rpc(RpcSources.StateAuthority, RpcTargets.All)]
+    private void RPC_AnnounceJoin(string nickname)
+    {
+        CombatLogUI.Instance?.AddMessage($"{nickname} joined the game.", Color.white);
+    }
+
+    [Rpc(RpcSources.StateAuthority, RpcTargets.All)]
+    private void RPC_AnnounceKill(int attackerRawId, string victimName)
+    {
+        string attackerName = TryGetNicknameByRawId(attackerRawId);
+        if (string.IsNullOrEmpty(attackerName))
+            attackerName = "알 수 없음";
+
+        CombatLogUI.Instance?.AddMessage($"{attackerName} eliminated {victimName}", Color.red);
+    }
+
+    private string TryGetNicknameByRawId(int rawId)
+    {
+        foreach (var p in Runner.ActivePlayers)
+        {
+            if (p.RawEncoded != rawId)
+                continue;
+
+            if (Runner.TryGetPlayerObject(p, out var obj))
+            {
+                var state = obj.GetComponent<PlayerState>();
+                if (state != null)
+                    return state.Nickname.ToString();
+            }
+        }
+        return string.Empty;
+    }
+
+    [Rpc(RpcSources.StateAuthority, RpcTargets.All)]
+    public void RPC_AnnounceLeave(string nickname)
+    {
+        CombatLogUI.Instance?.AddMessage($"{nickname} left the game.", Color.white);
     }
 }

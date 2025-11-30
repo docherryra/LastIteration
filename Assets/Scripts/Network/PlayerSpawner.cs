@@ -50,6 +50,14 @@ public class PlayerSpawner : MonoBehaviour, INetworkRunnerCallbacks
         {
             if (obj != null && obj.IsValid)
             {
+                // 닉네임이 있으면 퇴장 로그 전파
+                var state = obj.GetComponent<PlayerState>();
+                if (state != null)
+                {
+                    string nick = state.GetNickname();
+                    state.RPC_AnnounceLeave(nick);
+                }
+
                 runner.Despawn(obj);
             }
             spawnedPlayers.Remove(player);
