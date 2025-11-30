@@ -41,9 +41,12 @@ public class PlayerMovement : NetworkBehaviour
 
     private CameraController localCam;
 
-    [Networked] public float NetworkYaw { get; set; } // 네트워크 회전값
+    [Networked] public float NetworkYaw { get; set; }
 
-    // 리스폰 직후 이동 잠깐 막기용
+    [Header("회전 설정")]
+    [SerializeField] private float mouseSensitivity = 2f;
+    private float localYaw;
+
     private int freezeTicksAfterRespawn = 0;
 
     // 네트워크로 스폰될 때 호출됨
@@ -63,9 +66,9 @@ public class PlayerMovement : NetworkBehaviour
             targetGunY = standingGunY;
         }
 
-        // 로컬 플레이어일 때만 카메라를 연결 + 왼팔 숨기기
         if (Object.HasInputAuthority)
         {
+            localYaw = transform.eulerAngles.y;
             StartCoroutine(SetupCamera());
             HideLeftArmForLocal();
         }
@@ -118,7 +121,25 @@ public class PlayerMovement : NetworkBehaviour
         }
     }
 
-    public override void FixedUpdateNetwork() // 네트워크 프레임마다 실행됨
+    private void Update()
+    {
+        if (Object == null || !Object.HasInputAuthority) return;
+
+        var state = GetComponent<PlayerState>();
+        if (state != null && state.IsDead) return;
+
+        float mouseX = Input.GetAxisRaw("Mouse X") * mouseSensitivity;
+        localYaw += mouseX;
+    }
+
+    private void LateUpdate()
+    {
+        if (Object == null || !Object.HasInputAuthority) return;
+
+        transform.rotation = Quaternion.Euler(0, localYaw, 0);
+    }
+
+    public override void FixedUpdateNetwork()
     {
         // ★ 먼저 죽었으면 이동/애니메이션 전부 스킵
         var state = GetComponent<PlayerState>();
@@ -151,12 +172,12 @@ public class PlayerMovement : NetworkBehaviour
         HandleAnimation(data);
     }
 
-    // 서버 권위 이동 함수
     private void HandleMovementServer(NetworkInputData data)
     {
-        // --- 서버에서 Yaw 업데이트 (마우스X입력값 사용) ---
-        NetworkYaw += data.mouseDeltaX * 2f; // 회전 감도
-        transform.rotation = Quaternion.Euler(0, NetworkYaw, 0);
+        NetworkYaw += data.mouseDeltaX * mouseSensitivity;
+
+        if (!Object.HasInputAuthority)
+            transform.rotation = Quaternion.Euler(0, NetworkYaw, 0);
 
         // --- 땅 체크 ---
         isGrounded = controller.isGrounded;
@@ -241,9 +262,11 @@ public class PlayerMovement : NetworkBehaviour
         animator.SetFloat("Speed", speedParam);
     }
 
-    // 부드러운 카메라/총 높이 전환
     public override void Render()
     {
+        if (Object != null && !Object.HasInputAuthority)
+            transform.rotation = Quaternion.Euler(0, NetworkYaw, 0);
+
         if (cameraPivot != null)
         {
             Vector3 camPos = cameraPivot.localPosition;
