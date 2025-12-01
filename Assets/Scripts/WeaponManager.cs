@@ -168,12 +168,12 @@ public class WeaponManager : NetworkBehaviour
 
     private int GetWeaponTypeByKills(int kills)
     {
-        if (kills >= 10 && kills <= 15)
-            return 2; // ����
-        else if (kills >= 5 && kills <= 9)
-            return 1; // ����
+        if (kills >= 8)
+            return 2; // 권총
+        else if (kills >= 4)
+            return 1; // 샷건
         else
-            return 0; // ����
+            return 0; // 라이플
     }
 
     private void UpdateWeaponVisual()
