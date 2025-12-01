@@ -6,7 +6,7 @@ Unity 기반 실시간 멀티플레이어 FPS 게임
 
 ## 개요
 
-Last Iteration은 Unity(2022.3.x)와 Photon Fusion 네트워크 프레임워크를 기반으로 개발된 실시간 멀티플레이 FPS 게임이다.
+Last Iteration은 Unity 2022.3.62f1와 Photon Fusion 네트워크 프레임워크를 기반으로 개발된 실시간 멀티플레이 FPS 게임이다.
 
 로그인 및 토큰 기반 인증을 통해 닉네임을 연동하고, 4인 매칭/멀티룸 생성, HUD, Combat Log, Scoreboard, 무기·전투 시스템 등 실제 온라인 FPS 구조를 그대로 구현한다.
 
