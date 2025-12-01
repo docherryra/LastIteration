@@ -125,8 +125,8 @@ public class Gun : MonoBehaviour
     {
         if (bulletPrefab == null || firePoint == null) return;
 
-        // 총구 방향으로 발사
-        Vector3 direction = firePoint.forward;
+        // 화면 중앙(카메라 방향)으로 발사 - 무조건 카메라 forward 방향
+        Vector3 direction = playerCamera != null ? playerCamera.transform.forward : firePoint.forward;
 
         // 발사 소리를 모든 클라이언트에 브로드캐스트
         if (weaponManager != null)
@@ -134,14 +134,14 @@ public class Gun : MonoBehaviour
         else if (audioSource != null && fireSound != null)
             audioSource.PlayOneShot(fireSound, fireSoundVolume);
 
-        // 총구 방향으로 레이캐스트하여 히트 이펙트 표시 (Bullet 레이어 제외)
-        int bulletLayer = LayerMask.NameToLayer("Bullet");
-        int layerMask = bulletLayer != -1 ? ~(1 << bulletLayer) : ~0;
-        if (Physics.Raycast(firePoint.position, direction, out RaycastHit hit, maxRayDistance, layerMask))
+        // 총알 방향으로 레이캐스트하여 히트 이펙트 표시 (Bullet 레이어 제외)
+        int bulletLayerHit = LayerMask.NameToLayer("Bullet");
+        int layerMaskHit = bulletLayerHit != -1 ? ~(1 << bulletLayerHit) : ~0;
+        if (Physics.Raycast(firePoint.position, direction, out RaycastHit hitInfo, maxRayDistance, layerMaskHit))
         {
             if (hitEffectPrefab != null)
             {
-                GameObject effect = Instantiate(hitEffectPrefab, hit.point, Quaternion.LookRotation(hit.normal));
+                GameObject effect = Instantiate(hitEffectPrefab, hitInfo.point, Quaternion.LookRotation(hitInfo.normal));
                 Destroy(effect, 2f);
             }
         }

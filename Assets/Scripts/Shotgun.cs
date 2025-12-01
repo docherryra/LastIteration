@@ -128,19 +128,19 @@ public class Shotgun : MonoBehaviour
         else if (audioSource != null && fireSound != null)
             audioSource.PlayOneShot(fireSound, fireSoundVolume);
 
-        // 총구 방향 기준
-        Vector3 baseDirection = firePoint.forward;
+        // 화면 중앙(카메라 방향) 기준 - 무조건 카메라 forward 방향
+        Vector3 baseDirection = playerCamera != null ? playerCamera.transform.forward : firePoint.forward;
 
         for (int i = 0; i < pelletsPerShot; i++)
         {
-            // 총구 방향에서 산탄 퍼짐 적용
+            // 화면 중앙 방향에서 산탄 퍼짐 적용
             float randomX = Random.Range(-spreadAngle, spreadAngle);
             float randomY = Random.Range(-spreadAngle, spreadAngle);
 
             Quaternion spreadRotation = Quaternion.Euler(randomY, randomX, 0f);
             Vector3 spreadDirection = spreadRotation * baseDirection;
 
-            // 총구 방향으로 레이캐스트 (Bullet 레이어 제외)
+            // 산탄 방향으로 레이캐스트 (Bullet 레이어 제외)
             int bulletLayer = LayerMask.NameToLayer("Bullet");
             int layerMask = bulletLayer != -1 ? ~(1 << bulletLayer) : ~0;
             if (Physics.Raycast(firePoint.position, spreadDirection, out RaycastHit hit, maxRayDistance, layerMask))
